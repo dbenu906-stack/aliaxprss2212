@@ -183,27 +183,17 @@ import Link from 'next/link';
     <CardHeader>
         <CardTitle>Content Management</CardTitle>
         <CardDescription>
-            Update homepage and Viva page content.
+            Update homepage banners and sections.
         </CardDescription>
     </CardHeader>
     <CardContent className="grid gap-4 sm:grid-cols-2">
         <Link href="/admin/homepage" passHref>
             <Card className="h-full flex flex-col justify-center items-center hover:bg-muted/50 transition-colors">
                 <CardHeader>
-                    <CardTitle>Manage Homepage</CardTitle>
+                    <CardTitle>Manage Homepage Banners</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-muted-foreground">Update the homepage banner.</p>
-                </CardContent>
-            </Card>
-        </Link>
-        <Link href="/admin/viva" passHref>
-            <Card className="h-full flex flex-col justify-center items-center hover:bg-muted/50 transition-colors">
-                <CardHeader>
-                    <CardTitle>Manage Viva Page</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-muted-foreground">Update Viva page banner and products.</p>
+                    <p className="text-sm text-muted-foreground">Update homepage banner sections and text.</p>
                 </CardContent>
             </Card>
         </Link>

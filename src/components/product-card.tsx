@@ -10,16 +10,17 @@ import { formatPrice } from '@/lib/utils';
 // Flexible product type (from app data)
 type ProductLike = any;
 
-export function ProductCard({ product }: { product: ProductLike }) {
+export function ProductCard({ product, size = 'default' }: { product: ProductLike, size?: 'default' | 'compact' }) {
     const { openPreview, country } = useAppContext();
+    const compact = size === 'compact';
 
     const imageSrc = product.imageUrl || (product.imageUrls && product.imageUrls[0]) || '/placeholder.svg';
     const categoryId = product.categoryId || product.category || '';
 
     return (
-        <Card className="overflow-hidden flex flex-col transition-shadow duration-300 hover:shadow-lg">
+        <Card className={`overflow-hidden flex flex-col transition-shadow duration-300 hover:shadow-lg ${compact ? 'max-w-full' : 'h-full'}`}>
             <CardHeader className="p-0 overflow-hidden">
-                <div className="w-full h-40 relative bg-gray-100">
+                <div className={`w-full ${compact ? 'h-28' : 'h-40'} relative bg-gray-100`}>
                     {imageSrc ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -34,8 +35,8 @@ export function ProductCard({ product }: { product: ProductLike }) {
                     )}
                 </div>
             </CardHeader>
-            <CardContent className="p-2 flex flex-col justify-start">
-                <h3 className="text-xs font-semibold line-clamp-1">{product.name}</h3>
+            <CardContent className={`p-2 flex flex-col justify-start ${compact ? 'flex-none' : 'flex-1'}`}>
+                <h3 className={`${compact ? 'text-xs' : 'text-xs'} font-semibold line-clamp-1`}>{product.name}</h3>
             </CardContent>
             <CardFooter className="p-2 flex flex-col gap-1.5 border-t">
                 <div className="flex items-center justify-between w-full">
@@ -48,12 +49,12 @@ export function ProductCard({ product }: { product: ProductLike }) {
                     <Button 
                         variant="ghost" 
                         onClick={() => openPreview && openPreview(product)} 
-                        className="flex-1 text-xs h-7 p-0 py-0.5"
+                        className={`flex-1 text-xs ${compact ? 'h-6 p-0 py-0.5' : 'h-7 p-0 py-0.5'}`}
                     >
                         See preview
                     </Button>
                     <Link href={`/category/${categoryId}`} className="flex-1">
-                        <Button variant="outline" className="w-full text-xs h-7 p-0 py-0.5">See similar</Button>
+                        <Button variant="outline" className={`w-full text-xs ${compact ? 'h-6 p-0 py-0.5' : 'h-7 p-0 py-0.5'}`}>See similar</Button>
                     </Link>
                 </div>
             </CardFooter>

@@ -6,116 +6,131 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { addCategory } from './actions'; // Import the server action
+import { addCategory } from './actions';
+import Image from 'next/image';
 
 export default function AddCategoryPage() {
   const [categoryName, setCategoryName] = useState('');
-  const [subCategories, setSubCategories] = useState<{ name: string; image: string | File | null }[]>([{ name: '', image: null }]);
-  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [imageUrl, setImageUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleAddSubCategory = () => {
-    setSubCategories([...subCategories, { name: '', image: null }]);
-  };
-
-  const handleSubCategoryChange = (index: number, field: 'name' | 'image', value: string | File | null) => {
-    const newSubCategories = [...subCategories];
-    if (field === 'image' && value instanceof File) {
-        // If a File object is passed directly, keep it (deprecated path)
-        newSubCategories[index][field] = value;
-    } else if (typeof value === 'string') {
-        newSubCategories[index][field] = value;
-    }
-    setSubCategories(newSubCategories);
-  };
-
-  const handleSubCategoryFile = async (index: number, file: File | null) => {
-    if (!file) {
-      handleSubCategoryChange(index, 'image', null);
-      return;
-    }
-
+  const handleImageUpload = async (file: File) => {
     try {
-      setUploadingIndex(index);
+      setIsUploading(true);
       const url = await uploadFile(file);
-      handleSubCategoryChange(index, 'image', url);
+      setImageUrl(url);
+      toast({ title: 'Success', description: 'Image uploaded successfully' });
     } catch (err) {
-      console.error('Sub-category image upload failed', err);
+      console.error('Image upload failed:', err);
+      toast({ title: 'Error', description: 'Failed to upload image', variant: 'destructive' });
     } finally {
-      setUploadingIndex(null);
+      setIsUploading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append('categoryName', categoryName);
-    subCategories.forEach((sub, index) => {
-        formData.append(`subCategories[${index}][name]`, sub.name);
-        if (sub.image) {
-            formData.append(`subCategories[${index}][image]`, sub.image);
-        }
-    });
+    if (!categoryName.trim()) {
+      toast({ title: 'Error', description: 'Category name is required', variant: 'destructive' });
+      return;
+    }
 
-    const result = await addCategory(formData);
+    if (!imageUrl) {
+      toast({ title: 'Error', description: 'Category image is required', variant: 'destructive' });
+      return;
+    }
 
-    if (result.success) {
-      toast({ title: 'Success', description: result.message });
-      setCategoryName('');
-      setSubCategories([{ name: '', image: null }]);
-    } else {
-      toast({ title: 'Error', description: result.message, variant: 'destructive' });
+    setIsSubmitting(true);
+    try {
+      const result = await addCategory({
+        name: categoryName,
+        image_url: imageUrl,
+      });
+
+      if (result.success) {
+        toast({ title: 'Success', description: result.message });
+        setCategoryName('');
+        setImageUrl('');
+      } else {
+        toast({ title: 'Error', description: result.message, variant: 'destructive' });
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to create category', variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <h1 className="text-3xl font-bold mb-6">Add New Category</h1>
-      <form onSubmit={handleSubmit} className="space-y-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-2xl">
+      <h1 className="text-3xl font-bold mb-6">Create New Category</h1>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <Label htmlFor="categoryName" className="text-lg">Category Name</Label>
+          <Label htmlFor="categoryName" className="text-lg font-medium">Category Name</Label>
           <Input
             id="categoryName"
             value={categoryName}
             onChange={(e) => setCategoryName(e.target.value)}
+            placeholder="e.g., Electronics, Fashion, Home & Garden"
             className="mt-2"
           />
         </div>
 
         <div>
-          <h2 className="text-2xl font-bold mb-4">Sub-categories</h2>
-          {subCategories.map((sub, index) => (
-            <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 items-center">
-              <div>
-                <Label htmlFor={`subCategoryName-${index}`}>Sub-category Name</Label>
-                <Input
-                  id={`subCategoryName-${index}`}
-                  value={sub.name}
-                  onChange={(e) => handleSubCategoryChange(index, 'name', e.target.value)}
-                  className="mt-1"
+          <Label className="text-lg font-medium">Category Icon/Image</Label>
+          <p className="text-sm text-gray-600 mt-1 mb-3">This icon will appear in the Shop by Category section (recommended size: 96x96)</p>
+          
+          {imageUrl && (
+            <div className="mb-4 flex items-center gap-4">
+              <div className="relative w-24 h-24 bg-gray-100 rounded">
+                <Image
+                  src={imageUrl}
+                  alt={categoryName}
+                  fill
+                  className="object-contain"
                 />
               </div>
-              <div>
-                <Label htmlFor={`subCategoryImage-${index}`}>Image</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id={`subCategoryImage-${index}`}
-                    type="file"
-                    onChange={(e) => handleSubCategoryFile(index, e.target.files ? e.target.files[0] : null)}
-                    className="mt-1"
-                  />
-                  {uploadingIndex === index && <span className="text-sm text-gray-500">Uploading...</span>}
-                </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">{categoryName}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setImageUrl('')}
+                >
+                  Change Image
+                </Button>
               </div>
             </div>
-          ))}
-          <Button type="button" onClick={handleAddSubCategory} variant="outline">
-            Add Sub-category
-          </Button>
+          )}
+          
+          {!imageUrl && (
+            <div>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    handleImageUpload(e.target.files[0]);
+                  }
+                }}
+                disabled={isUploading}
+                className="mt-2"
+              />
+              {isUploading && <p className="text-sm text-gray-500 mt-2">Uploading...</p>}
+            </div>
+          )}
         </div>
 
-        <Button type="submit">Create Category</Button>
+        <div className="flex gap-2">
+          <Button type="submit" disabled={isSubmitting || !categoryName.trim() || !imageUrl}>
+            {isSubmitting ? 'Creating...' : 'Create Category'}
+          </Button>
+        </div>
       </form>
     </div>
   );

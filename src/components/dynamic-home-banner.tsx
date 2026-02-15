@@ -2,6 +2,8 @@
 
 import { useAppContext } from '@/context/AppContext';
 import Image from 'next/image';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export function DynamicHomeBanner() {
   const { homeBanners } = useAppContext();
@@ -13,12 +15,12 @@ export function DynamicHomeBanner() {
   const banner = homeBanners[0];
 
   return (
-    <div className="w-full">
+    <div className="w-full hidden md:block">
       {banner.image_url && (
-        <div className="relative w-full h-96 md:h-[500px] rounded-lg overflow-hidden">
+        <div className="relative w-full h-64 md:h-[380px] rounded-lg overflow-hidden">
           <Image
             src={banner.image_url}
-            alt="Home Banner"
+            alt={banner.title || "Home Banner"}
             fill
             className="object-cover w-full h-full"
             priority

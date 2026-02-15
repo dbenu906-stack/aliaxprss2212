@@ -105,56 +105,7 @@ export const products = [
         reviews: []
     },
 ];
-export const categories = [
-  {
-    "id": 2,
-    "name": "Men's Fashion",
-    "image_url": "https://via.placeholder.com/300x300/F4A261/000000?text=Men\'s+Fashion",
-    "icon": {}
-  },
-  {
-    "id": 3,
-    "name": "Laptops & Computers",
-    "image_url": "https://via.placeholder.com/300x300/264653/FFFFFF?text=Laptops",
-    "icon": {}
-  },
-  {
-    "id": 4,
-    "name": "Smartphones & Accessories",
-    "image_url": "https://via.placeholder.com/300x300/2A9D8F/FFFFFF?text=Smartphones",
-    "icon": {}
-  },
-  {
-    "id": 5,
-    "name": "Jewelry & Watches",
-    "image_url": "https://via.placeholder.com/300x300/E9C46A/000000?text=Jewelry",
-    "icon": {}
-  },
-  {
-    "id": 6,
-    "name": "Bags & Shoes",
-    "image_url": "https://via.placeholder.com/300x300/E76F51/FFFFFF?text=Bags+and+Shoes",
-    "icon": {}
-  },
-  {
-    "id": 7,
-    "name": "Headphones & Audio",
-    "image_url": "https://via.placeholder.com/300x300/E76F51/FFFFFF?text=Headphones",
-    "icon": {}
-  },
-  {
-    "id": 1768754440676,
-    "name": "Technical",
-    "image_url": "https://images.philips.com/is/image/philipsconsumer/d134f85f27144e8a8e0db0c600e8bf8e?wid=700&hei=700&$pnglarge$",
-    "icon": {}
-  },
-  {
-    "id": 1768755562337,
-    "name": "Technical Guruji",
-    "image_url": "https://via.placeholder.com/300x300/000000/FFFFFF?text=Guru",
-    "icon": {}
-  }
-];
+export const categories = [];
 
 export const users = [
     {

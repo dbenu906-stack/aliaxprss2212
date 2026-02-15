@@ -33,7 +33,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu';
-import { categories } from '@/lib/data';
+// categories are loaded from AppContext now
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -43,11 +43,11 @@ import {
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { cn, slugify } from '@/lib/utils';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppContext } from '@/context/AppContext';
 import { MainLogo } from './main-logo'; // Corrected import
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { CountrySelector } from './country-selector'; // Corrected import
 import { Icons } from './icons';
 
@@ -110,9 +110,32 @@ const ListItem = React.forwardRef<
 ListItem.displayName = 'ListItem';
 
 export function SiteHeader() {
-  const { user, isUserLoading, signOut: handleSignOut, isSeller, isAdmin } = useAppContext();
+  const { user, isUserLoading, signOut: handleSignOut, isSeller, isAdmin, categories } = useAppContext();
+  const [hoveredCategory, setHoveredCategory] = useState<any | null>(null);
+  const [categoryProducts, setCategoryProducts] = useState<any[]>([]);
+  const [isCatLoading, setIsCatLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
+  const pathname = usePathname();
+  
+  // Determine highlighted category based on current route
+  useEffect(() => {
+    if (pathname === '/' || pathname === '') {
+      setSelectedCategory(null);
+    } else if (pathname.startsWith('/business')) {
+      setSelectedCategory({ name: 'Aliaxpress Business', id: 'business' });
+    } else if (pathname.startsWith('/category/')) {
+      const categorySlug = pathname.split('/category/')[1];
+      const cat = categories?.find(c => slugify(c.name) === categorySlug);
+      if (cat) {
+        setSelectedCategory(cat);
+        handleCategoryHover(cat);
+      }
+    } else {
+      setSelectedCategory(null);
+    }
+  }, [pathname, categories]);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,6 +148,36 @@ export function SiteHeader() {
     if (!email) return 'G';
     return email.charAt(0).toUpperCase();
   }
+
+  const handleCategoryHover = async (category: any) => {
+    setHoveredCategory(category);
+    try {
+      setIsCatLoading(true);
+      const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('Failed to fetch products');
+      const data = await res.json();
+      const allProducts = data.data || data || [];
+      const prods = allProducts.filter((p: any) => p.category_id === category.id);
+      setCategoryProducts(prods);
+    } catch (err) {
+      setCategoryProducts([]);
+    } finally {
+      setIsCatLoading(false);
+    }
+  };
+
+  const displayCategory = hoveredCategory || (selectedCategory && selectedCategory.id !== 'business' ? selectedCategory : null);
+
+  // Keep localStorage sync for backward compatibility
+  useEffect(() => {
+    if (selectedCategory && selectedCategory.id !== 'business') {
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('selectedCategory', JSON.stringify(selectedCategory));
+        }
+      } catch (e) {}
+    }
+  }, [selectedCategory]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background">
@@ -353,81 +406,86 @@ export function SiteHeader() {
                   <NavigationMenuContent>
                     <div className="grid grid-cols-[200px_1fr] w-[800px] p-4">
                       <ul className="flex flex-col gap-1 pr-4 border-r">
-                        {categories.map((category) => {
-                          const Icon = Icons[category.icon as keyof typeof Icons];
-                          return (
-                            <li key={category.id} className="p-2 hover:bg-accent rounded-md cursor-pointer text-sm">
-                             <Link
-                                href={`/category/${slugify(category.name)}`}
-                                className="flex items-center gap-2"
-                                target="_blank"
-                                rel="noopener noreferrer"
+                        {!categories || categories.length === 0 ? (
+                          <li className="p-2 text-sm text-muted-foreground">No categories yet</li>
+                        ) : (
+                          categories.map((category: any) => {
+                            const Icon = Icons[category.icon as keyof typeof Icons];
+                            return (
+                              <li
+                                key={category.id}
+                                className="p-2 hover:bg-accent rounded-md cursor-pointer text-sm"
+                                onMouseEnter={() => handleCategoryHover(category)}
+                                onFocus={() => handleCategoryHover(category)}
                               >
-                                {Icon && <Icon className="w-4 h-4" />}
-                                {category.name}
-                              </Link>
-                            </li>
-                          );
-                        })}
+                               <Link
+                                  href={`/category/${slugify(category.name)}`}
+                                  className="flex items-center gap-2"
+                                >
+                                  {category.image_url ? (
+                                    <img src={category.image_url} alt={category.name} className="w-4 h-4 rounded-sm object-contain" />
+                                  ) : (
+                                    Icon && <Icon className="w-4 h-4" />
+                                  )}
+                                  {category.name}
+                                </Link>
+                              </li>
+                            );
+                          })
+                        )}
                       </ul>
                       <div className="pl-4">
-                        <h3 className="font-bold mb-2">Recommended</h3>
-                        <div className="grid grid-cols-4 gap-4 text-center">
-                          <div>
-                            <div className="w-16 h-16 bg-muted mx-auto rounded-md mb-1"></div>
-                            <span className="text-xs">Wind Generators</span>
-                          </div>
-                          <div>
-                            <div className="w-16 h-16 bg-muted mx-auto rounded-md mb-1"></div>
-                            <span className="text-xs">Kitchen Cabinet</span>
-                          </div>
-                          <div>
-                            <div className="w-16 h-16 bg-muted mx-auto rounded-md mb-1"></div>
-                            <span className="text-xs">Light Bulbs</span>
-                          </div>
-                          <div>
-                            <div className="w-16 h-16 bg-muted mx-auto rounded-md mb-1"></div>
-                            <span className="text-xs">Wall Panels</span>
-                          </div>
-                        </div>
-                        <div className="mt-4 grid grid-cols-3 gap-4">
-                            {subCategories['Electronics']?.map((sub) => (
-                              <div key={sub.title}>
-                                <h4 className="font-semibold mb-2 text-sm">{sub.title}</h4>
-                                <ul className="space-y-1">
-                                  {sub.items.map((item) => (
-                                    <li key={item}><Link href="#" className="text-xs text-muted-foreground hover:text-primary">{item}</Link></li>
-                                  ))}
-                                </ul>
-                              </div>
-                            ))}
-                        </div>
+                        {!displayCategory ? (
+                          <div className="text-sm text-muted-foreground">Select a category to preview products</div>
+                        ) : (
+                          <>
+                            <h3 className="font-bold mb-2">Products in {displayCategory.name}</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                              {categoryProducts.length === 0 ? (
+                                <div className="col-span-2 text-sm text-muted-foreground">No products found</div>
+                              ) : (
+                                categoryProducts.slice(0,8).map((p: any) => (
+                                  <Link key={p.id} href={`/product/${p.id}`} className="flex items-center gap-2 p-2 rounded hover:bg-accent">
+                                    <img src={(p.image_url || p.imageUrls?.[0] || p.imageUrls?.[0]) as string} alt={p.name} className="w-12 h-12 object-cover rounded" />
+                                    <div className="text-sm">{p.name}</div>
+                                  </Link>
+                                ))
+                              )}
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
-             <Link
-                  href={`/business`}
-                  className="hover:text-primary"
-                  target="_blank"
-                  rel="noopener noreferrer"
+            {/* small horizontal carousel - single Business item inside carousel below */}
+            <div className="flex items-center gap-4 overflow-x-auto py-2 px-2">
+              <button
+                onClick={() => {
+                  setSelectedCategory({ name: 'Aliaxpress Business', id: 'business' });
+                  router.push('/business');
+                }}
+                className={
+                  `flex-shrink-0 px-3 py-1 rounded text-sm transition-colors ${selectedCategory?.id === 'business' ? 'bg-yellow-200 text-black font-semibold' : 'hover:bg-accent'}`
+                }
+              >
+                Aliaxpress Business
+              </button>
+              {(categories || []).map((cat: any) => (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    router.push(`/category/${slugify(cat.name)}`);
+                  }}
+                  className={`flex-shrink-0 px-3 py-1 rounded text-sm transition-colors ${selectedCategory?.id === cat.id ? 'bg-yellow-200 text-black font-semibold' : 'hover:bg-accent'}`}
                 >
-                    Aliaxpress Business
-                </Link>
-
-            {categories.slice(0, 5).map((category) => (
-               <Link
-                  href={`/category/${slugify(category.name)}`}
-                  className="hover:text-primary"
-                  key={category.id}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                    {category.name}
-                </Link>
-            ))}
+                  {cat.name}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </nav>

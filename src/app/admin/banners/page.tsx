@@ -14,10 +14,6 @@ export default function AdminBannersPage() {
         <div className="bg-white rounded shadow">
           <BannerEditor type="home" />
         </div>
-
-        <div className="bg-white rounded shadow">
-          <BannerEditor type="viva" />
-        </div>
       </div>
     </div>
   );

@@ -61,3 +61,45 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+export async function PUT(req: NextRequest) {
+  try {
+    const sessionCookie = req.cookies.get('session');
+    if (!sessionCookie?.value) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const user = JSON.parse(sessionCookie.value);
+    if (!user.isAdmin) {
+      return NextResponse.json({ error: 'Only admins can update categories' }, { status: 403 });
+    }
+
+    const { id, name, image_url } = await req.json();
+
+    if (!id) {
+      return NextResponse.json({ error: 'Category id required' }, { status: 400 });
+    }
+
+    const conn = await pool.getConnection();
+    try {
+      const [result] = await conn.execute(
+        'UPDATE categories SET name = ?, image_url = ? WHERE id = ?',
+        [name, image_url || '', id]
+      );
+      
+      if ((result as any).affectedRows === 0) {
+        return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Category updated successfully',
+      });
+    } finally {
+      conn.release();
+    }
+  } catch (err: any) {
+    console.error('Update category error:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

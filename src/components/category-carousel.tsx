@@ -1,12 +1,18 @@
 'use client';
 
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { categories } from "@/lib/data";
 import { slugify } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
+import { useAppContext } from "@/context/AppContext";
 
 export function CategoryCarousel() {
+    const { categories } = useAppContext();
+
+    if (!categories || categories.length === 0) {
+        return <div className="w-full text-center py-8">Loading categories...</div>;
+    }
+
     return (
         <Carousel className="w-full">
             <CarouselContent>
@@ -18,7 +24,7 @@ export function CategoryCarousel() {
                                     <div className="flex flex-col items-center justify-center p-4 bg-gray-100 rounded-lg h-full">
                                         <div className="relative w-24 h-24 mb-2">
                                             <Image
-                                                src={category.image_url}
+                                                src={category.image_url || category.imageUrl || '/placeholder.svg'}
                                                 alt={category.name}
                                                 width={96}
                                                 height={96}

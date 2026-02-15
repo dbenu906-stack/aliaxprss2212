@@ -11,6 +11,7 @@ type Banner = {
   button_text?: string;
   button_link?: string;
   background_color?: string;
+  text_color?: string;
   is_active?: number;
 };
 
@@ -102,6 +103,13 @@ export function BannerEditor({ type = 'home' }: { type?: 'home' | 'viva' }) {
         <input className="w-full p-2 border" value={form.subtitle || ''} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} />
       </div>
 
+      {type === 'viva' && (
+        <div className="mb-4">
+          <label className="block mb-1">Font Color</label>
+          <input className="w-full p-2 border" value={(form as any).text_color || ''} onChange={(e) => setForm({ ...form, text_color: e.target.value })} placeholder="#ffffff or black" />
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block mb-1">Button Text</label>
@@ -113,10 +121,12 @@ export function BannerEditor({ type = 'home' }: { type?: 'home' | 'viva' }) {
         </div>
       </div>
 
-      <div className="mb-4">
-        <label className="block mb-1">Background Color</label>
-        <input className="w-full p-2 border" value={form.background_color || ''} onChange={(e) => setForm({ ...form, background_color: e.target.value })} />
-      </div>
+      {type !== 'viva' && (
+        <div className="mb-4">
+          <label className="block mb-1">Background Color</label>
+          <input className="w-full p-2 border" value={form.background_color || ''} onChange={(e) => setForm({ ...form, background_color: e.target.value })} />
+        </div>
+      )}
 
       <div className="flex items-center gap-3 mb-4">
         <label className="flex items-center gap-2">
