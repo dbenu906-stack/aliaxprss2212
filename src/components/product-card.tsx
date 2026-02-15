@@ -17,47 +17,63 @@ export function ProductCard({ product, size = 'default' }: { product: ProductLik
     const imageSrc = product.imageUrl || (product.imageUrls && product.imageUrls[0]) || '/placeholder.svg';
     const categoryId = product.categoryId || product.category || '';
 
+    const handleCardClick = () => {
+        openPreview && openPreview(product);
+    };
+
     return (
-        <Card className={`overflow-hidden flex flex-col transition-shadow duration-300 hover:shadow-lg ${compact ? 'max-w-full' : 'h-full'}`}>
-            <CardHeader className="p-0 overflow-hidden">
-                <div className={`w-full ${compact ? 'h-28' : 'h-40'} relative bg-gray-100`}>
-                    {imageSrc ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                            src={imageSrc}
-                            alt={product.name}
-                            className="object-cover w-full h-full transition-transform duration-300 ease-out hover:scale-110"
-                        />
-                    ) : (
-                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                            <span className="text-xs text-gray-500">No Image</span>
-                        </div>
-                    )}
-                </div>
-            </CardHeader>
-            <CardContent className={`p-2 flex flex-col justify-start ${compact ? 'flex-none' : 'flex-1'}`}>
-                <h3 className={`${compact ? 'text-xs' : 'text-xs'} font-semibold line-clamp-1`}>{product.name}</h3>
-            </CardContent>
-            <CardFooter className="p-2 flex flex-col gap-1.5 border-t">
-                <div className="flex items-center justify-between w-full">
-                    <Badge variant="outline" className="text-xs py-0 px-1">{product.category || product.store?.name || ''}</Badge>
-                    <span className="font-bold text-xs">
-                        {formatPrice(product.price, country)}
-                    </span>
-                </div>
-                <div className="flex gap-0.5 w-full">
-                    <Button 
-                        variant="ghost" 
-                        onClick={() => openPreview && openPreview(product)} 
-                        className={`flex-1 text-xs ${compact ? 'h-6 p-0 py-0.5' : 'h-7 p-0 py-0.5'}`}
-                    >
-                        See preview
-                    </Button>
-                    <Link href={`/category/${categoryId}`} className="flex-1">
-                        <Button variant="outline" className={`w-full text-xs ${compact ? 'h-6 p-0 py-0.5' : 'h-7 p-0 py-0.5'}`}>See similar</Button>
-                    </Link>
-                </div>
-            </CardFooter>
-        </Card>
+        <div 
+            onClick={handleCardClick}
+            className="cursor-pointer group"
+        >
+            <Card className={`overflow-hidden flex flex-col transition-all duration-300 group-hover:shadow-2xl group-hover:scale-110 group-active:scale-95 ${compact ? 'max-w-full' : 'h-full'}`}>
+                <CardHeader 
+                    className="p-0 overflow-hidden"
+                >
+                    <div className={`w-full ${compact ? 'h-28' : 'h-40'} relative bg-gray-100`}>
+                        {imageSrc ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                                src={imageSrc}
+                                alt={product.name}
+                                className="object-cover w-full h-full transition-transform duration-300 ease-out"
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                                <span className="text-xs text-gray-500">No Image</span>
+                            </div>
+                        )}
+                    </div>
+                </CardHeader>
+                <CardContent 
+                    className={`p-2 flex flex-col justify-start ${compact ? 'flex-none' : 'flex-1'}`}
+                >
+                    <h3 className={`${compact ? 'text-xs' : 'text-xs'} font-semibold line-clamp-1`}>{product.name}</h3>
+                </CardContent>
+                <CardFooter className="p-2 flex flex-col gap-1.5 border-t">
+                    <div className="flex items-center justify-between w-full">
+                        <Badge variant="outline" className="text-xs py-0 px-1">{product.category || product.store?.name || ''}</Badge>
+                        <span className="font-bold text-xs">
+                            {formatPrice(product.price, country)}
+                        </span>
+                    </div>
+                    <div className="flex gap-0.5 w-full">
+                        <Button 
+                            variant="ghost" 
+                            className={`flex-1 text-xs ${compact ? 'h-6 p-0 py-0.5' : 'h-7 p-0 py-0.5'}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleCardClick();
+                            }}
+                        >
+                            See preview
+                        </Button>
+                        <Link href={`/category/${categoryId}`} className="flex-1" onClick={(e) => e.stopPropagation()}>
+                            <Button variant="outline" className={`w-full text-xs ${compact ? 'h-6 p-0 py-0.5' : 'h-7 p-0 py-0.5'}`}>See similar</Button>
+                        </Link>
+                    </div>
+                </CardFooter>
+            </Card>
+        </div>
     );
 }

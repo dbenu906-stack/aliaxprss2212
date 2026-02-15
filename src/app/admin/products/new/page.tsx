@@ -5,6 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,8 @@ export default function NewProductPage() {
   const { user, categories } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
-  const [displayImage, setDisplayImage] = useState<File | null>(null);
+  const [productImages, setProductImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { control, handleSubmit, formState: { errors }, reset } = useForm({
@@ -53,15 +55,40 @@ export default function NewProductPage() {
     }
   }, [user, router]);
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).slice(0, 4);
+    setProductImages(files);
+
+    // Generate previews
+    const previews: string[] = [];
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        previews.push(reader.result as string);
+        if (previews.length === files.length) {
+          setImagePreviews(previews);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = productImages.filter((_, i) => i !== index);
+    const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    setProductImages(newImages);
+    setImagePreviews(newPreviews);
+  };
+
   const onSubmit = async (data: any) => {
-    if (!displayImage) {
-      toast({ variant: 'destructive', title: 'Display image is required' });
+    if (productImages.length === 0) {
+      toast({ variant: 'destructive', title: 'At least one product image is required' });
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const displayImageUrl = await toBase64(displayImage);
+      const displayImageUrls = await Promise.all(productImages.map(file => toBase64(file)));
 
       const productPayload = {
         name: data.name,
@@ -69,7 +96,7 @@ export default function NewProductPage() {
         price: data.price,
         categoryId: parseInt(data.categoryId, 10),
         stock: data.stock,
-        imageUrls: [displayImageUrl],
+        imageUrls: displayImageUrls,
         store: {
             id: user?.id,
             name: user?.storeName || 'My Store',
@@ -89,7 +116,8 @@ export default function NewProductPage() {
 
       toast({ title: 'Product Added', description: 'Your product has been added successfully.' });
       reset();
-      setDisplayImage(null);
+      setProductImages([]);
+      setImagePreviews([]);
       router.push('/admin/products');
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error adding product';
@@ -173,9 +201,50 @@ export default function NewProductPage() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Product Image</label>
-                        <Input type="file" accept="image/*" onChange={(e) => setDisplayImage(e.target.files ? e.target.files[0] : null)} className="mt-1" />
-                        <p className="text-sm text-muted-foreground">Upload an image for the product.</p>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Product Images (up to 4)</label>
+                        <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-gray-400 transition-colors">
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                multiple
+                                onChange={handleImageChange}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            />
+                            <div className="text-center">
+                                <p className="text-sm text-gray-600">Click to upload images (up to 4)</p>
+                                <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB each</p>
+                            </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-2">Upload images for product preview. The first image will be displayed as the main product image.</p>
+
+                        {/* Image previews */}
+                        {imagePreviews.length > 0 && (
+                            <div className="mt-4">
+                                <h4 className="text-sm font-medium text-gray-700 mb-2">Selected Images ({imagePreviews.length})</h4>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {imagePreviews.map((preview, index) => (
+                                        <div key={index} className="relative group">
+                                            <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img 
+                                                    src={preview} 
+                                                    alt={`Preview ${index + 1}`} 
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeImage(index)}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                            <p className="text-xs text-gray-500 text-center mt-1">Image {index + 1}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex justify-end gap-2 pt-4 border-t">

@@ -5,7 +5,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ImageUpload } from '@/components/image-upload';
 import { categories } from '@/lib/data';
 import { useAppContext } from '@/context/AppContext';
 import type { Product } from '@/lib/types';
@@ -15,18 +18,21 @@ export default function EditProductPage() {
   const router = useRouter();
   const { products, updateProduct } = useAppContext();
   const [product, setProduct] = useState<Partial<Product> | null>(null);
+  const [images, setImages] = useState<string[]>([]);
 
   useEffect(() => {
     const p = products.find((p) => p.id === id);
     if (p) {
       setProduct(p);
+      setImages(p.imageUrls || []);
     }
   }, [id, products]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (product) {
-      setProduct({ ...product, [name]: value });
+      const isNumeric = ['price', 'originalPrice', 'stock'].includes(name);
+      setProduct({ ...product, [name]: isNumeric ? Number(value) || 0 : value });
     }
   };
 
@@ -36,9 +42,13 @@ export default function EditProductPage() {
     }
   };
 
+  const handleImageChange = (urls: string[]) => {
+    setImages(urls);
+  };
+
   const handleSave = () => {
     if (product) {
-      updateProduct(product.id as string, product as Product);
+      updateProduct(product.id as string, { ...product, imageUrls: images } as Product);
       router.push('/seller/products');
     }
   };
@@ -49,48 +59,56 @@ export default function EditProductPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Edit Product</h1>
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-          <Input id="name" name="name" value={product.name} onChange={handleInputChange} />
-        </div>
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-          <Textarea id="description" name="description" value={product.description} onChange={handleInputChange} />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
+      <Card className="max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Edit Product</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
             <div>
-                <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price</label>
-                <Input id="price" name="price" type="number" value={product.price} onChange={handleInputChange} />
+              <Label htmlFor="name">Product Name</Label>
+              <Input id="name" name="name" value={product.name || ''} onChange={handleInputChange} placeholder="e.g., Summer T-Shirt" />
             </div>
             <div>
-                <label htmlFor="originalPrice" className="block text-sm font-medium text-gray-700">Original Price</label>
-                <Input id="originalPrice" name="originalPrice" type="number" value={product.originalPrice} onChange={handleInputChange} />
+              <Label htmlFor="description">Description</Label>
+              <Textarea id="description" name="description" value={product.description || ''} onChange={handleInputChange} placeholder="Describe the product..." />
             </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="price">Price (৳)</Label>
+                <Input id="price" name="price" type="number" value={product.price || 0} onChange={handleInputChange} placeholder="e.g., 500" />
+              </div>
+              <div>
+                <Label htmlFor="originalPrice">Original Price</Label>
+                <Input id="originalPrice" name="originalPrice" type="number" value={product.originalPrice || 0} onChange={handleInputChange} placeholder="e.g., 700" />
+              </div>
+              <div>
+                <Label htmlFor="stock">Stock</Label>
+                <Input id="stock" name="stock" type="number" value={product.stock || 0} onChange={handleInputChange} placeholder="e.g., 100" />
+              </div>
+            </div>
             <div>
-                <label htmlFor="stock" className="block text-sm font-medium text-gray-700">Stock</label>
-                <Input id="stock" name="stock" type="number" value={product.stock} onChange={handleInputChange} />
+              <Label htmlFor="categoryId">Category</Label>
+              <Select onValueChange={handleCategoryChange} defaultValue={String(product.categoryId)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div>
-                <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">Category</label>
-                <Select onValueChange={handleCategoryChange} defaultValue={String(product.categoryId)}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {categories.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                </Select>
+              <Label>Product Images (up to 4)</Label>
+              <ImageUpload value={images} onChange={handleImageChange} maxImages={4} />
             </div>
-        </div>
-        <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => router.back()}>Cancel</Button>
-            <Button onClick={handleSave}>Save Changes</Button>
-        </div>
-      </div>
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button variant="outline" onClick={() => router.back()}>Cancel</Button>
+              <Button onClick={handleSave}>Save Changes</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

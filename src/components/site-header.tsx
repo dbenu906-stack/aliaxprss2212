@@ -157,7 +157,7 @@ export function SiteHeader() {
       if (!res.ok) throw new Error('Failed to fetch products');
       const data = await res.json();
       const allProducts = data.data || data || [];
-      const prods = allProducts.filter((p: any) => p.category_id === category.id);
+      const prods = allProducts.filter((p: any) => (p.category_id || p.categoryId) === category.id);
       setCategoryProducts(prods);
     } catch (err) {
       setCategoryProducts([]);

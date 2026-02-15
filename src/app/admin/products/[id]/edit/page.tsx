@@ -27,7 +27,7 @@ export default function EditProductPage() {
       const productToEdit = getProductById(id as string);
       if (productToEdit) {
         setProduct(productToEdit);
-        setImages(productToEdit.images || []);
+        setImages(productToEdit.imageUrls || []);
         setNotFound(false);
       } else {
         setNotFound(true);
@@ -55,7 +55,7 @@ export default function EditProductPage() {
 
   const handleSave = async () => {
     if (product && id) {
-      updateProduct(id as string, { ...product, images });
+      updateProduct(id as string, { ...product, imageUrls: images });
       router.push('/admin/products');
     }
   };
@@ -114,11 +114,11 @@ export default function EditProductPage() {
             </Select>
         </div>
         <div>
-          <Label>Images (up to 5)</Label>
+          <Label>Product Images (up to 4)</Label>
           <ImageUpload
             value={images}
             onChange={handleImageChange}
-            maxImages={5}
+            maxImages={4}
           />
         </div>
         <div className="flex justify-end gap-2">

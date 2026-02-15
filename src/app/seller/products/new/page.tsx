@@ -93,8 +93,8 @@ export default function NewProductPage() {
             </div>
         </div>
         <div>
-          <Label>Images (up to 5)</Label>
-          <ImageUpload value={imageUrls} onChange={setImageUrls} maxImages={5} />
+          <Label>Product Images (up to 4)</Label>
+          <ImageUpload value={imageUrls} onChange={setImageUrls} maxImages={4} />
         </div>
         <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => router.back()}>Cancel</Button>
